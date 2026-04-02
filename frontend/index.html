@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EPI Management — Arthur Fernandes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- CURSOR -->
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-follower" id="cursor-follower"></div>
+
+  <!-- NOISE -->
+  <div class="noise-overlay"></div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <a href="#" class="nav-logo">
+      <span class="logo-bracket">&lt;</span>EPI<span class="logo-bracket">/&gt;</span>
+    </a>
+    <div class="nav-center">
+      <button class="nav-tab active" data-tab="epis">EPIs</button>
+      <button class="nav-tab" data-tab="funcionarios">Funcionários</button>
+      <button class="nav-tab" data-tab="entregas">Entregas</button>
+    </div>
+    <div class="nav-status">
+      <span class="api-dot" id="api-dot"></span>
+      <span class="api-label" id="api-label">Conectando...</span>
+    </div>
+  </nav>
+
+  <!-- HERO / HEADER -->
+  <header class="page-header">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="hero-grid"></div>
+
+    <div class="header-content">
+      <div class="status-badge reveal">
+        <span class="status-dot"></span>
+        Sistema de Gestão de EPIs em Obras
+      </div>
+      <h1 class="header-title reveal reveal-delay-1">
+        <span class="title-line">EPI</span>
+        <span class="title-line title-accent">Management</span>
+      </h1>
+      <p class="header-sub reveal reveal-delay-2">
+        Controle completo de entregas de Equipamentos de Proteção Individual.<br />
+        Projeto desenvolvido por <a href="https://github.com/ArthurFernandesDev" target="_blank" class="accent-link">Arthur Fernandes</a> — Java + Spring Boot.
+      </p>
+
+      <div class="header-stats reveal reveal-delay-3" id="header-stats">
+        <div class="hstat">
+          <span class="hstat-num" id="stat-epis">—</span>
+          <span class="hstat-label">EPIs</span>
+        </div>
+        <div class="hstat-divider"></div>
+        <div class="hstat">
+          <span class="hstat-num" id="stat-funcs">—</span>
+          <span class="hstat-label">Funcionários</span>
+        </div>
+        <div class="hstat-divider"></div>
+        <div class="hstat">
+          <span class="hstat-num" id="stat-entregas">—</span>
+          <span class="hstat-label">Entregas</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Code card decorativo -->
+    <div class="hero-visual reveal reveal-delay-3">
+      <div class="code-card">
+        <div class="code-card-header">
+          <span class="dot dot-red"></span>
+          <span class="dot dot-yellow"></span>
+          <span class="dot dot-green"></span>
+          <span class="code-card-title">EntregaService.java</span>
+        </div>
+        <pre class="code-content"><code><span class="c-keyword">@Transactional</span>
+<span class="c-keyword">public</span> EntregaDTO registrar(
+    EntregaDTO.<span class="c-class">Request</span> req) {
+
+  <span class="c-comment">// 1. Valida funcionário</span>
+  <span class="c-class">Funcionario</span> func =
+    funcionarioService
+      .buscarPorId(req.funcionarioId);
+
+  <span class="c-comment">// 2. Desconta estoque</span>
+  epiService.descontarEstoque(
+    req.epiId, req.quantidade);
+
+  <span class="c-comment">// 3. Salva a entrega</span>
+  <span class="c-keyword">return</span> toResponse(
+    entregaRepo.save(entrega));
+}</code></pre>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <div class="container">
+
+      <!-- ===== TAB: EPIs ===== -->
+      <section class="tab-section active" id="tab-epis">
+        <div class="section-header reveal">
+          <div class="section-tag-row">
+            <span class="section-tag">// 01</span>
+            <span class="section-badge">CRUD Completo</span>
+          </div>
+          <h2 class="section-title">Equipamentos de <span class="accent">Proteção</span></h2>
+          <p class="section-desc">Gerencie o estoque de EPIs disponíveis na obra.</p>
+        </div>
+
+        <div class="toolbar reveal">
+          <button class="btn btn-primary" onclick="openModal('epi')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Novo EPI
+          </button>
+          <div class="search-box">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="search-epi" placeholder="Buscar EPI..." oninput="filterTable('epi', this.value)" />
+          </div>
+        </div>
+
+        <div class="table-wrapper reveal">
+          <table class="data-table" id="table-epi">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>Descrição</th>
+                <th>Estoque</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-epi">
+              <tr class="loading-row"><td colspan="5"><div class="loading-pulse"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===== TAB: FUNCIONÁRIOS ===== -->
+      <section class="tab-section" id="tab-funcionarios">
+        <div class="section-header reveal">
+          <div class="section-tag-row">
+            <span class="section-tag">// 02</span>
+            <span class="section-badge">CRUD Completo</span>
+          </div>
+          <h2 class="section-title">Trabalhadores da <span class="accent">Obra</span></h2>
+          <p class="section-desc">Cadastro de funcionários que recebem os EPIs.</p>
+        </div>
+
+        <div class="toolbar reveal">
+          <button class="btn btn-primary" onclick="openModal('funcionario')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Novo Funcionário
+          </button>
+          <div class="search-box">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="search-funcionario" placeholder="Buscar funcionário..." oninput="filterTable('funcionario', this.value)" />
+          </div>
+        </div>
+
+        <div class="table-wrapper reveal">
+          <table class="data-table" id="table-funcionario">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nome</th>
+                <th>CPF</th>
+                <th>Função</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-funcionario">
+              <tr class="loading-row"><td colspan="5"><div class="loading-pulse"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===== TAB: ENTREGAS ===== -->
+      <section class="tab-section" id="tab-entregas">
+        <div class="section-header reveal">
+          <div class="section-tag-row">
+            <span class="section-tag">// 03</span>
+            <span class="section-badge">Histórico</span>
+          </div>
+          <h2 class="section-title">Registro de <span class="accent">Entregas</span></h2>
+          <p class="section-desc">Histórico completo de EPIs entregues a funcionários.</p>
+        </div>
+
+        <div class="toolbar reveal">
+          <button class="btn btn-primary" onclick="openModal('entrega')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nova Entrega
+          </button>
+          <div class="search-box">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="search-entrega" placeholder="Buscar por funcionário..." oninput="filterTable('entrega', this.value)" />
+          </div>
+        </div>
+
+        <div class="table-wrapper reveal">
+          <table class="data-table" id="table-entrega">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Funcionário</th>
+                <th>EPI</th>
+                <th>Quantidade</th>
+                <th>Data</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-entrega">
+              <tr class="loading-row"><td colspan="5"><div class="loading-pulse"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-logo"><span class="logo-bracket">&lt;</span>AF<span class="logo-bracket">/&gt;</span></div>
+        <p class="footer-text">Desenvolvido com 💚 por <strong>Arthur Fernandes</strong></p>
+        <p class="footer-sub">Java · Spring Boot · REST API · HTML/CSS/JS</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- BACK TO TOP -->
+  <button class="back-to-top" id="back-to-top" aria-label="Topo">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+  </button>
+
+  <!-- ===========================
+       MODAL GENÉRICO
+       =========================== -->
+  <div class="modal-overlay" id="modal-overlay" onclick="closeModal()">
+    <div class="modal" id="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-title">Modal</h3>
+        <button class="modal-close" onclick="closeModal()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" id="modal-save-btn" onclick="saveModal()">
+          Salvar
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- CONFIRM DIALOG -->
+  <div class="modal-overlay" id="confirm-overlay" onclick="closeConfirm()">
+    <div class="modal modal-sm" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Confirmar exclusão</h3>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--text-secondary);font-size:.95rem;">Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeConfirm()">Cancelar</button>
+        <button class="btn btn-danger" id="confirm-delete-btn">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
